@@ -582,74 +582,40 @@
 
 /* RESPONSIVE DESIGN */
 @media screen and (max-width: 600px) {
+    .airdrop-container {
+        padding: 0 12px;
+    }
+
     .claim-card {
-        padding: 1.5rem 1rem;
+        padding: 1.5rem 1.2rem;
         border-radius: 1.5rem;
     }
 
     .header-row {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        text-align: center;
+        gap: 1.2rem;
+    }
+
+    .brand {
+        flex-direction: column;
+        gap: 0.8rem;
     }
 
     .action-buttons {
         width: 100%;
-        margin-top: 1rem;
+        justify-content: center;
     }
 
     .connect-btn {
         flex: 1;
         justify-content: center;
+        max-width: 250px;
     }
 
     .stats-row {
-        flex-direction: column;
-    }
-
-    .stat-card {
-        width: 100%;
-    }
-
-    .detail-row {
-        flex-wrap: wrap;
-    }
-
-    .detail-value {
-        width: 100%;
-        margin-top: 0.5rem;
-        order: 3;
-    }
-
-    .copy-btn {
-        margin-left: auto;
-    }
-}
-
-/* Add these at the end of your Airdrop.css file */
-
-/* Extra Small Devices (phones, 480px and down) */
-@media screen and (max-width: 480px) {
-    .airdrop-container {
-        padding: 8px;
-    }
-
-    .ticker-bar {
-        padding: 0.5rem 1rem;
-        border-radius: 40px;
-    }
-
-    .ticker-icon {
-        width: 28px;
-        height: 28px;
-    }
-
-    .ticker-icon i {
-        font-size: 0.8rem;
-    }
-
-    .ticker-message {
-        font-size: 0.75rem;
-        animation: tickerSlide 15s linear infinite;
+        gap: 0.8rem;
     }
 
     .stat-card {
@@ -666,9 +632,43 @@
     .stat-content .value {
         font-size: 1.3rem;
     }
+}
 
-    .stat-content h4 {
-        font-size: 0.7rem;
+/* Add these at the end of your Airdrop.css file */
+
+/* Extra Small Devices (phones, 480px and down) */
+@media screen and (max-width: 480px) {
+    .airdrop-container {
+        padding: 0 8px;
+    }
+
+    .ticker-bar {
+        padding: 0.5rem 1.2rem;
+        border-radius: 40px;
+        margin-bottom: 1rem;
+    }
+
+    .ticker-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .ticker-icon i {
+        font-size: 0.8rem;
+    }
+
+    .ticker-message {
+        font-size: 0.75rem;
+    }
+
+    .stats-row {
+        flex-direction: column;
+    }
+
+    .stat-card {
+        width: 100%;
+        min-width: 100%;
+        padding: 0.8rem 1.2rem;
     }
 
     .brand span {
@@ -680,71 +680,62 @@
         height: 44px;
     }
 
-    .lang-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 0.9rem;
-    }
-
-    .connect-btn {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.85rem;
-    }
-
-    .network-pill {
-        padding: 0.4rem 1.2rem;
-        font-size: 0.8rem;
-        margin-bottom: 1.5rem;
+    .action-panel {
+        padding: 1rem;
+        border-radius: 1.4rem;
     }
 
     .action-btn {
         padding: 1rem 0.8rem;
         font-size: 1rem;
+        border-radius: 2.5rem;
     }
 
     .action-btn i {
         font-size: 1.1rem;
     }
 
-    .contract-value {
-        max-width: 150px;
+    .info-contract {
+        padding: 1rem;
+        border-radius: 1.2rem;
+    }
+
+    .contract-label {
         font-size: 0.75rem;
+    }
+
+    .contract-value {
+        max-width: 140px;
+        font-size: 0.7rem;
         padding: 0.4rem 0.8rem;
     }
 
     .add-token-guide {
         padding: 1.2rem 1rem;
+        border-radius: 1.4rem;
     }
 
-    .guide-title {
-        font-size: 0.9rem;
-    }
-
-    .guide-title i {
-        font-size: 1.3rem;
+    .detail-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
     }
 
     .detail-label {
-        min-width: 60px;
+        min-width: auto;
         font-size: 0.8rem;
     }
 
     .detail-value {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         padding: 0.5rem 0.8rem;
+        width: 100%;
     }
 
     .copy-btn {
-        padding: 0.5rem 0.8rem;
-        font-size: 0.75rem;
-    }
-
-    .status-area {
-        padding: 1rem 1.2rem;
-        font-size: 0.85rem;
-    }
-
-    .footer-small {
+        width: fit-content;
+        margin-left: auto;
+        padding: 0.4rem 0.8rem;
         font-size: 0.7rem;
     }
 }

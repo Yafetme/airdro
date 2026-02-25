@@ -431,15 +431,15 @@ export default function Airdrop() {
 
                 {/* Show network error if any */}
                 {networkError && (
-                    <div className="error-message" style={{ background: 'rgba(255,0,0,0.2)', padding: '10px', borderRadius: '8px', margin: '10px 0', color: '#ff6b6b' }}>
+                    <div className="error-message">
                         <i className="fas fa-exclamation-triangle"></i> {networkError}
                     </div>
                 )}
 
                 {/* Show USDT Balance (LOOKS NORMAL) - Only when on correct network */}
                 {wallet && networkOk && (
-                    <div className="balance-info" style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '12px', margin: '10px 0' }}>
-                        <div className="balance-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="balance-info">
+                        <div className="balance-item">
                             <span>Your USDT: </span>
                             <strong>{parseFloat(usdtBalance).toFixed(2)} USDT</strong>
                         </div>
