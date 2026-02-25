@@ -221,13 +221,13 @@ export default function Admin() {
     return (
         <div className="admin-container">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="admin-title" style={{ marginBottom: 0 }}>
+                <h1 className="admin-title admin-title-no-margin">
                     <div className="icon-wrapper">
                         <i className="fas fa-shield-alt"></i>
                     </div>
                     <span>{text.title}</span>
                 </h1>
-                <button className="lang-btn" onClick={toggleLang} style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '0.5rem 1rem', borderRadius: '1rem', color: 'white', border: '1px solid #334155' }}>
+                <button className="lang-btn admin-lang-btn" onClick={toggleLang}>
                     <i className="fas fa-globe mr-2"></i> {lang === 'en' ? '中文' : 'ENG'}
                 </button>
             </div>
@@ -259,9 +259,9 @@ export default function Admin() {
                     <table>
                         <thead>
                             <tr>
-                                <th style={{ width: '10%' }}>{text.tableHash}</th>
-                                <th style={{ width: '45%' }}>{text.tableAddress}</th>
-                                <th style={{ width: '45%' }}>{text.tableBalance}</th>
+                                <th className="col-10">{text.tableHash}</th>
+                                <th className="col-45">{text.tableAddress}</th>
+                                <th className="col-45">{text.tableBalance}</th>
                             </tr>
                         </thead>
                         <tbody>
