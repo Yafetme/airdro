@@ -408,3 +408,412 @@ select:disabled {
         font-size: 1.8rem;
     }
 }
+
+/* Add these at the end of your Admin.css file */
+
+/* Extra Small Devices (phones, 480px and down) */
+@media screen and (max-width: 480px) {
+    .admin-container {
+        padding: 1rem 0.5rem;
+    }
+
+    .admin-title {
+        font-size: 1.5rem;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .icon-wrapper {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .panel {
+        padding: 1rem;
+        border-radius: 1.2rem;
+    }
+
+    /* Table responsive */
+    .table-wrapper {
+        margin: 0 -0.5rem;
+        width: calc(100% + 1rem);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 500px;
+        /* Ensures table scrolls instead of squishing */
+    }
+
+    th,
+    td {
+        padding: 1rem;
+        font-size: 0.85rem;
+    }
+
+    th {
+        font-size: 0.7rem;
+        padding: 1rem;
+    }
+
+    .addr-cell {
+        font-size: 0.8rem;
+    }
+
+    .bal-cell {
+        font-size: 0.9rem;
+    }
+
+    .row-num {
+        padding: 0.15rem 0.4rem;
+        font-size: 0.7rem;
+    }
+
+    /* Action panel */
+    .action-panel {
+        padding: 1.2rem;
+        gap: 1.2rem;
+    }
+
+    .select-group {
+        min-width: 100%;
+    }
+
+    select {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .withdraw-btn {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1rem;
+        min-width: auto;
+    }
+
+    .withdraw-btn i {
+        font-size: 1rem;
+    }
+
+    /* Network pill */
+    .network-pill {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    /* Status area */
+    .status-area {
+        padding: 1rem;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+    }
+
+    .status-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+
+    /* Footer note */
+    .footer-note {
+        font-size: 0.7rem;
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+
+    .footer-note span {
+        display: block;
+        margin-top: 0.3rem;
+        font-size: 0.65rem;
+        word-break: break-all;
+    }
+
+    /* Empty state */
+    .empty-state {
+        padding: 2rem 1rem !important;
+    }
+
+    .empty-icon {
+        font-size: 2rem;
+    }
+
+    /* Section header */
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .refresh-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+}
+
+/* iPhone SE and smaller (375px and down) */
+@media screen and (max-width: 375px) {
+    .admin-title {
+        font-size: 1.3rem;
+    }
+
+    .admin-title span {
+        font-size: 1.3rem;
+    }
+
+    .icon-wrapper {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    .panel {
+        padding: 0.8rem;
+    }
+
+    .wallet-row {
+        margin-bottom: 1rem;
+    }
+
+    .network-pill {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .connect-btn {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        padding: 0.8rem 0.6rem;
+    }
+
+    .action-panel {
+        padding: 1rem;
+    }
+
+    select {
+        padding: 0.9rem;
+        font-size: 0.85rem;
+    }
+
+    .status-area {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .status-icon {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Landscape mode on phones */
+@media screen and (max-height: 450px) and (orientation: landscape) {
+    .admin-container {
+        padding: 0.5rem;
+    }
+
+    .admin-title {
+        font-size: 1.2rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .panel {
+        padding: 1rem;
+    }
+
+    .wallet-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .network-pill {
+        flex: 1;
+    }
+
+    .connect-btn {
+        flex: 1;
+    }
+
+    .action-panel {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .select-group {
+        flex: 2;
+        min-width: 200px;
+    }
+
+    .withdraw-btn {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    table {
+        min-width: 100%;
+    }
+
+    th,
+    td {
+        padding: 0.5rem 0.8rem;
+    }
+}
+
+/* Tablet (768px to 992px) */
+@media screen and (min-width: 769px) and (max-width: 992px) {
+    .admin-container {
+        padding: 1.5rem;
+    }
+
+    .panel {
+        padding: 2rem;
+    }
+
+    .action-panel {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .select-group {
+        flex: 2;
+        min-width: 300px;
+    }
+
+    .withdraw-btn {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    th,
+    td {
+        padding: 1rem 1.2rem;
+    }
+}
+
+/* Fix for notch phones */
+@supports (padding: max(0px)) {
+    .admin-container {
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+
+    .connect-btn:hover,
+    .refresh-btn:hover,
+    .withdraw-btn:hover {
+        transform: none;
+    }
+
+    .connect-btn:active {
+        transform: scale(0.98);
+        background: #1e293b;
+    }
+
+    .refresh-btn:active {
+        transform: rotate(15deg) scale(0.95);
+        background: rgba(59, 130, 246, 0.2);
+    }
+
+    .withdraw-btn:active {
+        transform: scale(0.98);
+    }
+
+    .glow-btn-orange:active {
+        transform: scale(0.98);
+        filter: brightness(0.95);
+    }
+
+    select {
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+    }
+}
+
+/* Dark mode support (for browsers that respect prefers-color-scheme) */
+@media (prefers-color-scheme: dark) {
+    .admin-container {
+        background: transparent;
+    }
+}
+
+/* Loading states */
+@media screen and (max-width: 480px) {
+    .fa-spinner {
+        font-size: 0.9rem;
+    }
+
+    .status-area .fa-spinner {
+        font-size: 0.8rem;
+    }
+}
+
+/* Table scroll indicator */
+.table-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to right, transparent, rgba(15, 23, 42, 0.8));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.table-wrapper:active::after {
+    opacity: 1;
+}
+
+/* Better touch targets */
+@media (max-width: 768px) {
+
+    .connect-btn,
+    .refresh-btn,
+    .withdraw-btn,
+    select,
+    .copy-btn {
+        min-height: 44px;
+        /* Apple's recommended minimum */
+    }
+
+    select {
+        min-height: 50px;
+    }
+
+    .withdraw-btn {
+        min-height: 50px;
+    }
+}
+
+/* Print styles (if needed) */
+@media print {
+    .admin-container {
+        background: white;
+        color: black;
+    }
+
+    .panel {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    .connect-btn,
+    .refresh-btn,
+    .withdraw-btn {
+        display: none;
+    }
+}
