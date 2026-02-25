@@ -22,6 +22,10 @@
     -webkit-text-fill-color: transparent;
 }
 
+.admin-title-no-margin {
+    margin-bottom: 0 !important;
+}
+
 .icon-wrapper {
     background: linear-gradient(135deg, #1d4ed8, #3b82f6);
     width: 50px;
@@ -200,6 +204,14 @@
     transform: translateY(-2px);
 }
 
+.admin-lang-btn {
+    background: rgba(15, 23, 42, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    color: white;
+    border: 1px solid #334155;
+}
+
 .refresh-btn {
     background: rgba(59, 130, 246, 0.1);
     border: 1px solid rgba(59, 130, 246, 0.2);
@@ -239,6 +251,14 @@ th {
     font-size: 0.8rem;
     letter-spacing: 0.05em;
     border-bottom: 2px solid rgba(30, 41, 59, 0.8);
+}
+
+.col-10 {
+    width: 10%;
+}
+
+.col-45 {
+    width: 45%;
 }
 
 td {
@@ -382,6 +402,27 @@ select:disabled {
     opacity: 0.5;
     filter: grayscale(1);
     pointer-events: none;
+}
+
+/* New classes moved from inline styles */
+.admin-error-message {
+    background: rgba(255, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px 0;
+    color: #ff6b6b;
+}
+
+.admin-balance-info {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 12px;
+    margin: 10px 0;
+}
+
+.admin-balance-item {
+    display: flex;
+    justify-content: space-between;
 }
 
 /* RESPONSIVE DESIGN */
@@ -613,6 +654,17 @@ select:disabled {
 
     .status-icon {
         margin-bottom: 0.5rem;
+    }
+
+    .col-10,
+    .col-45 {
+        width: auto !important;
+    }
+
+    .admin-balance-item {
+        flex-direction: column;
+        gap: 0.3rem;
+        align-items: center;
     }
 }
 

