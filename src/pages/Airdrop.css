@@ -624,3 +624,285 @@
         margin-left: auto;
     }
 }
+
+/* Add these at the end of your Airdrop.css file */
+
+/* Extra Small Devices (phones, 480px and down) */
+@media screen and (max-width: 480px) {
+    .airdrop-container {
+        padding: 8px;
+    }
+
+    .ticker-bar {
+        padding: 0.5rem 1rem;
+        border-radius: 40px;
+    }
+
+    .ticker-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .ticker-icon i {
+        font-size: 0.8rem;
+    }
+
+    .ticker-message {
+        font-size: 0.75rem;
+        animation: tickerSlide 15s linear infinite;
+    }
+
+    .stat-card {
+        min-width: 120px;
+        padding: 0.8rem 1rem;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .stat-content .value {
+        font-size: 1.3rem;
+    }
+
+    .stat-content h4 {
+        font-size: 0.7rem;
+    }
+
+    .brand span {
+        font-size: 1.6rem;
+    }
+
+    .qsc-logo {
+        width: 44px;
+        height: 44px;
+    }
+
+    .lang-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+
+    .connect-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+    }
+
+    .network-pill {
+        padding: 0.4rem 1.2rem;
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .action-btn {
+        padding: 1rem 0.8rem;
+        font-size: 1rem;
+    }
+
+    .action-btn i {
+        font-size: 1.1rem;
+    }
+
+    .contract-value {
+        max-width: 150px;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .add-token-guide {
+        padding: 1.2rem 1rem;
+    }
+
+    .guide-title {
+        font-size: 0.9rem;
+    }
+
+    .guide-title i {
+        font-size: 1.3rem;
+    }
+
+    .detail-label {
+        min-width: 60px;
+        font-size: 0.8rem;
+    }
+
+    .detail-value {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.8rem;
+    }
+
+    .copy-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    .status-area {
+        padding: 1rem 1.2rem;
+        font-size: 0.85rem;
+    }
+
+    .footer-small {
+        font-size: 0.7rem;
+    }
+}
+
+/* iPhone SE and smaller (375px and down) */
+@media screen and (max-width: 375px) {
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .stat-icon {
+        margin: 0 auto;
+    }
+
+    .stat-content {
+        text-align: center;
+    }
+
+    .contract-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+
+    .contract-value {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .detail-label {
+        min-width: auto;
+    }
+
+    .detail-value {
+        width: 100%;
+        margin: 0.3rem 0;
+    }
+
+    .copy-btn {
+        width: 100%;
+        justify-content: center;
+        margin: 0;
+    }
+
+    .balance-info {
+        padding: 10px !important;
+        font-size: 0.9rem;
+    }
+}
+
+/* Landscape mode on phones */
+@media screen and (max-height: 450px) and (orientation: landscape) {
+    .airdrop-container {
+        padding: 5px;
+    }
+
+    .stats-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        flex: 1 1 calc(50% - 0.5rem);
+    }
+
+    .claim-card {
+        padding: 1rem;
+    }
+
+    .ticker-bar {
+        margin-bottom: 0.8rem;
+    }
+
+    .action-panel {
+        padding: 1rem;
+    }
+
+    .button-group {
+        flex-direction: row;
+    }
+
+    .action-btn {
+        flex: 1;
+    }
+}
+
+/* Fix for notch phones */
+@supports (padding: max(0px)) {
+    .airdrop-container {
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .action-btn:hover:not(.disabled) {
+        transform: none;
+        background: linear-gradient(95deg, #1c2b41, #121e2f);
+    }
+
+    .action-btn:active:not(.disabled) {
+        transform: scale(0.98);
+        background: linear-gradient(95deg, #25496e, #172b41);
+    }
+
+    .copy-btn:hover {
+        transform: none;
+        background: transparent;
+    }
+
+    .copy-btn:active {
+        background: #263f63;
+        transform: scale(0.98);
+    }
+}
+
+/* Loading state responsive */
+@media screen and (max-width: 480px) {
+    .status-area i.fa-spinner {
+        font-size: 1rem;
+    }
+}
+
+/* Balance display responsive */
+.balance-info {
+    transition: all 0.3s ease;
+}
+
+@media screen and (max-width: 480px) {
+    .balance-info {
+        padding: 8px !important;
+        margin: 5px 0 !important;
+        font-size: 0.85rem;
+    }
+
+    .balance-item strong {
+        font-size: 0.9rem;
+    }
+}
+
+/* Error message responsive */
+.error-message {
+    transition: all 0.3s ease;
+}
+
+@media screen and (max-width: 480px) {
+    .error-message {
+        padding: 8px !important;
+        font-size: 0.8rem;
+        margin: 5px 0 !important;
+    }
+}
